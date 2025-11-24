@@ -1,4 +1,4 @@
-# 🧠 Sistema de Gerenciamento de Pacientes
+# 🧠 VitalKey - Sistema de Gerenciamento de Pacientes
 
 Um sistema backend em **FastAPI** conectado a um banco de dados **SQLite/MySQL**, responsável por gerenciar pacientes, médicos e autenticação com JWT.
 
@@ -10,7 +10,8 @@ Um sistema backend em **FastAPI** conectado a um banco de dados **SQLite/MySQL**
 - **FastAPI**
 - **SQLAlchemy**
 - **Pydantic**
-- **SQLite/MySQL**
+- **MySQL (produção com PyMySQL)**
+- **SQLite (somente para testes locais)**
 - **JWT (Auth com JOSE)**
 
 ---
@@ -18,44 +19,72 @@ Um sistema backend em **FastAPI** conectado a um banco de dados **SQLite/MySQL**
 ## 📂 Estrutura do Projeto
 
 ```
-app/
-├── __init__.py
-├── main.py
-├── config.py
-├── database.py
-├── auth/
-│   ├── __init__.py
-│   ├── auth.py
-│   └── dependencies.py
-├── models/
-│   ├── __init__.py
-│   ├── paciente.py
-│   └── medico.py
-├── routes/
-│   ├── __init__.py
-│   ├── paciente_routes.py
-│   └── medico_routes.py
-├── schemas/
-│   ├── __init__.py
-│   ├── paciente_schema.py
-│   └── medico_schema.py
-└── utils/
+VitalKey/
+│── main.py
+│── requirements.txt
+│── README.md
+└── app/
+    ├── database.py
+    ├── config.py
     ├── __init__.py
+    ├── models/
+    │   ├── medico.py
+    │   └── paciente.py
+    ├── routers/
+    │   ├── medico_router.py
+    │   └── paciente_router.py
+    ├── schemas/
+    │   ├── medico_schemas.py
+    │   └── paciente_schemas.py
+    ├── security/
+    │   ├── auth.py
+    │   └── dependencies.py
+    └── utils/
+        └── __init__.py
 ```
 
 ---
 
-## ⚙️ Configuração do Ambiente
+## ⚙️ **Configuração do Ambiente**
 
-Crie um arquivo `.env` com as variáveis de ambiente:
+Crie um arquivo `.env` na raiz do projeto contendo:
 
-```env
-DATABASE_URL=sqlite:///./app.db
-SECRET_KEY=sua_chave_secreta_aqui
+``` env
+DATABASE_URL=mysql+pymysql://usuario:senha@host:3306/nome_do_banco
+SECRET_KEY=chave_super_secreta
 ALGORITHM=HS256
 TEMPO_EXPIRACAO=60
 ```
 
+### Para testes locais com SQLite:
+
+``` env
+DATABASE_URL=sqlite:///./teste.db
+```
+
+---
+
+## ▶️ **Como Rodar o Projeto**
+
+1.  Instale as dependências:
+
+``` bash
+pip install -r requirements.txt
+```
+
+2.  Execute o servidor:
+
+``` bash
+uvicorn main:app --reload
+```
+
+3.  Acesse a documentação automática:
+
+```{=html}
+<!-- -->
+```
+    http://localhost:8000/docs
+    
 ---
 
 ## 🧩 Endpoints Principais
@@ -75,9 +104,17 @@ TEMPO_EXPIRACAO=60
 
 ---
 
+## 🔐 **Autenticação**
+
+Após o login, envie o token nos headers:
+
+    Authorization: Bearer <seu_token_jwt>
+
+---
+
 ## 📋 Exemplos de Requisições
 
-### 🔹 POST `/pacientes/`
+### 🔹 POST `/paciente/`
 
 ```json
 {
@@ -96,7 +133,7 @@ TEMPO_EXPIRACAO=60
 }
 ```
 
-### 🔹 PATCH `/pacientes/{id}`
+### 🔹 PATCH `/paciente/{id}`
 
 ```json
 {
@@ -132,7 +169,6 @@ Certifique-se de **não versionar** arquivos sensíveis. Seu `.gitignore` deve c
 
 ```
 .env
-*.db
 __pycache__/
 *.pyc
 ```
@@ -142,4 +178,5 @@ __pycache__/
 ## 🧠 Desenvolvido por
 
 **Guilherme Bueno** — Projeto acadêmico de Engenharia de Computação  
-Integrando conceitos de **banco de dados, autenticação e APIs RESTful**.
+Aplicando conceitos de **APIs REST**, **bancos de dados**, **segurança**
+e **autenticação JWT**.
