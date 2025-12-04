@@ -56,3 +56,6 @@ class PacienteUpdate(BaseModel):
     medicamentos_continuos: Optional[List[str]] = None
     contatos_emergencia: Optional[List[ContatoEmergenciaUpdate]] = None
     informacoes_privadas: Optional[InformacoesPrivadasUpdate] = None
+
+class PacienteAtivoUpdate(BaseModel):
+    ativo: bool

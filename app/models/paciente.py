@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, JSON, TIMESTAMP, ForeignKey
+from sqlalchemy import Column, Integer, String, JSON, TIMESTAMP, ForeignKey, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 from app.database import Base
@@ -13,6 +13,7 @@ class Paciente(Base):
     medicamentos_continuos = Column(JSON, default=[])
     contatos_emergencia = Column(JSON, default=[])
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
+    ativo = Column(Boolean, default=True, nullable=False)
 
     informacoes_privadas = relationship(
         "InformacoesPrivadas",

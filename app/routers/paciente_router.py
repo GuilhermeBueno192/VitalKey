@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from app.database import get_db  # função que retorna a sessão do SQLAlchemy
 from app.models.paciente import Paciente, InformacoesPrivadas  # SQLAlchemy models
-from app.schemas.paciente_schemas import PacienteBase, PacienteCompleto, InformacoesPrivadasBase, PacienteUpdate, InformacoesPrivadasUpdate
+from app.schemas.paciente_schemas import PacienteBase, PacienteCompleto, PacienteUpdate, PacienteAtivoUpdate
 from app.security.dependencies import autenticar_medico
 
 router = APIRouter()
@@ -19,7 +19,7 @@ def pesquisar_pacientes(id: Optional[int] = None, nome: Optional[str] = None, db
     Pesquisa pacientes por ID ou nome.  
     Se nenhum parâmetro for informado, retorna todos os pacientes.
     """
-    query = db.query(Paciente)
+    query = db.query(Paciente).filter(Paciente.ativo == True)
 
     if id is not None:
         query = query.filter(Paciente.id == id)
@@ -112,17 +112,21 @@ def atualizar_paciente(id: int, paciente_update: PacienteUpdate, db: Session = D
     db.refresh(paciente)
     return paciente
 
-# DELETE - Remover um paciente
-@router.delete("/paciente/{id}", status_code=204)
-def deletar_paciente(id: int, db: Session = Depends(get_db)):
-    """
-    Deleta um paciente e suas informações privadas automaticamente.
-    """
-
+# PATCH - Ativar ou desativar paciente
+@router.patch("/paciente/{id}/ativo", response_model=PacienteBase)
+def atualizar_status_paciente(
+    id: int,
+    status_update: PacienteAtivoUpdate,
+    db: Session = Depends(get_db)
+):
     paciente = db.query(Paciente).filter(Paciente.id == id).first()
+
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
-    db.delete(paciente)  # remove paciente + informações privadas (cascade)
+    paciente.ativo = status_update.ativo
+
     db.commit()
-    return
+    db.refresh(paciente)
+
+    return paciente
