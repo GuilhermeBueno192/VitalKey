@@ -13,14 +13,8 @@ router = APIRouter()
 
 # GET - Médico logado
 @router.get("/me", response_model=MedicoResponse)
-def get_me(medico=Depends(autenticar_medico), db: Session = Depends(get_db)):
-    """
-    Retorna os dados do médico que está logado, usando o token de autenticação.
-    """
-    db_medico = db.query(Medico).filter(Medico.id == medico["id"]).first()
-    if not db_medico:
-        raise HTTPException(status_code=404, detail="Médico não encontrado")
-    return db_medico
+def get_me(medico: Medico=Depends(autenticar_medico)):
+    return medico
 
 # POST - Criar um novo medico no sistema
 @router.post("/medico", response_model=MedicoResponse, status_code=201)
@@ -37,21 +31,13 @@ def criar_medico(medico: MedicoCreate, db: Session = Depends(get_db)):
 
 # PATCH - Atualizar parcialmente os dados do médico logado
 @router.patch("/me", response_model=MedicoResponse)
-def atualizar_me(medico_update: MedicoUpdate, medico=Depends(autenticar_medico), db: Session = Depends(get_db)):
-    """
-    Atualiza os dados do médico que está logado.
-    Campos não enviados permanecem inalterados.
-    """
-    db_medico = db.query(Medico).filter(Medico.id == medico["id"]).first()
-    if not db_medico:
-        raise HTTPException(status_code=404, detail="Médico não encontrado")
-
+def atualizar_me(medico_update: MedicoUpdate, medico: Medico = Depends(autenticar_medico), db: Session = Depends(get_db)):
     for field, value in medico_update.model_dump(exclude_unset=True).items():
-        setattr(db_medico, field, value)
+        setattr(medico, field, value)
 
     db.commit()
-    db.refresh(db_medico)
-    return db_medico
+    db.refresh(medico)
+    return medico
 
 # DELETE - Remover um médico
 @router.delete("/medico/{id}", status_code=204)
