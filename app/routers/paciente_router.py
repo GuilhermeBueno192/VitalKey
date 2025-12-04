@@ -12,19 +12,40 @@ from app.security.dependencies import autenticar_medico
 router = APIRouter()
 
 # GET público: retorna informações básicas de um paciente específico
-@router.get("/paciente/{id}", response_model=PacienteBase)
-def get_paciente(id: int, db: Session = Depends(get_db)):
-    paciente = db.query(Paciente).filter(Paciente.id == id).first()
+@router.get("/paciente/{paciente_id}", response_model=PacienteBase)
+def get_paciente(paciente_id: str, db: Session = Depends(get_db)):
+    """
+    Permite buscar paciente por ID ou nome (parcial ou completo).
+    """
+    # Buscar por ID
+    if paciente_id.isdigit():
+        paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
+    else:
+        # Buscar por nome (ignora maiúsc/minúsc)
+        paciente = db.query(Paciente).filter(
+            Paciente.nome.ilike(f"%{paciente_id}%")
+        ).first()
+
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
     return paciente
 
 # GET privado: retorna informações completas, precisa de token
 @router.get("/paciente/{paciente_id}/completo", response_model=PacienteCompleto)
-def get_paciente_completo(paciente_id: int, db: Session = Depends(get_db), medico=Depends(autenticar_medico)):
-    paciente = db.query(Paciente).filter(Paciente.id == paciente_id).first()
+def get_paciente_completo(paciente_id: str, db: Session = Depends(get_db), medico=Depends(autenticar_medico)):
+    # Buscar por ID
+    if paciente_id.isdigit():
+        paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
+    else:
+        # Buscar por nome (parcial)
+        paciente = db.query(Paciente).filter(
+            Paciente.nome.ilike(f"%{paciente_id}%")
+        ).first()
+
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
+
     return paciente
 
 # POST - Criar um novo paciente no sistema
