@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 from sqlalchemy import text
 
 from app.database import get_db  # função que retorna a sessão do SQLAlchemy
@@ -11,21 +11,27 @@ from app.security.dependencies import autenticar_medico
 
 router = APIRouter()
 
+# GET para retornar na pesquisa todos os pacientes possiveis
+@router.get("/pacientes", response_model=List[PacienteBase])
+def pesquisar_pacientes(id: Optional[int] = None, nome: Optional[str] = None, db: Session = Depends(get_db)
+):
+    """
+    Pesquisa pacientes por ID ou nome.  
+    Se nenhum parâmetro for informado, retorna todos os pacientes.
+    """
+    query = db.query(Paciente)
+
+    if id is not None:
+        query = query.filter(Paciente.id == id)
+    if nome:
+        query = query.filter(Paciente.nome.ilike(f"%{nome}%"))
+
+    return query.all()
+
 # GET público: retorna informações básicas de um paciente específico
 @router.get("/paciente/{paciente_id}", response_model=PacienteBase)
 def get_paciente(paciente_id: str, db: Session = Depends(get_db)):
-    """
-    Permite buscar paciente por ID ou nome (parcial ou completo).
-    """
-    # Buscar por ID
-    if paciente_id.isdigit():
-        paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
-    else:
-        # Buscar por nome (ignora maiúsc/minúsc)
-        paciente = db.query(Paciente).filter(
-            Paciente.nome.ilike(f"%{paciente_id}%")
-        ).first()
-
+    paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
@@ -34,15 +40,7 @@ def get_paciente(paciente_id: str, db: Session = Depends(get_db)):
 # GET privado: retorna informações completas, precisa de token
 @router.get("/paciente/{paciente_id}/completo", response_model=PacienteCompleto)
 def get_paciente_completo(paciente_id: str, db: Session = Depends(get_db), medico=Depends(autenticar_medico)):
-    # Buscar por ID
-    if paciente_id.isdigit():
-        paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
-    else:
-        # Buscar por nome (parcial)
-        paciente = db.query(Paciente).filter(
-            Paciente.nome.ilike(f"%{paciente_id}%")
-        ).first()
-
+    paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
 
