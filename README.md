@@ -13,6 +13,7 @@ Um sistema backend em **FastAPI** conectado a um banco de dados **SQLite/MySQL**
 - **MySQL (produção com PyMySQL)**
 - **SQLite (somente para testes locais)**
 - **JWT (Auth com JOSE)**
+- **Python-multipart**
 
 ---
 
@@ -180,3 +181,4 @@ __pycache__/
 **Guilherme Bueno** — Projeto acadêmico de Engenharia de Computação  
 Aplicando conceitos de **APIs REST**, **bancos de dados**, **segurança**
 e **autenticação JWT**.
+
