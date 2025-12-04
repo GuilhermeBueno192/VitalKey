@@ -7,16 +7,20 @@ from app.database import get_db  # função que retorna a sessão do SQLAlchemy
 from app.models.medico import Medico  # SQLAlchemy models
 from app.schemas.medico_schemas import MedicoCreate, MedicoLogin, MedicoResponse, MedicoUpdate  # Pydantic models
 from app.security.auth import criar_token
+from app.security.dependencies import autenticar_medico
 
 router = APIRouter()
 
-# GET - Médico específico pelo ID
-@router.get("/medico/{id}", response_model=MedicoResponse)
-def get_medico(id: int, db: Session = Depends(get_db)):
-    medico = db.query(Medico).filter(Medico.id == id).first()
-    if not medico:
+# GET - Médico logado
+@router.get("/me", response_model=MedicoResponse)
+def get_me(medico=Depends(autenticar_medico), db: Session = Depends(get_db)):
+    """
+    Retorna os dados do médico que está logado, usando o token de autenticação.
+    """
+    db_medico = db.query(Medico).filter(Medico.id == medico["id"]).first()
+    if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
-    return medico
+    return db_medico
 
 # POST - Criar um novo medico no sistema
 @router.post("/medico", response_model=MedicoResponse, status_code=201)
@@ -31,19 +35,23 @@ def criar_medico(medico: MedicoCreate, db: Session = Depends(get_db)):
     db.refresh(novo_medico)
     return novo_medico
 
-# PATCH - Atualizar parcialmente um medico
-@router.patch("/medico/{id}", response_model=MedicoResponse)
-def atualizar_medico(id: int, medico_update: MedicoUpdate, db: Session = Depends(get_db)):
-    medico = db.query(Medico).filter(Medico.id == id).first()
-    if not medico:
+# PATCH - Atualizar parcialmente os dados do médico logado
+@router.patch("/me", response_model=MedicoResponse)
+def atualizar_me(medico_update: MedicoUpdate, medico=Depends(autenticar_medico), db: Session = Depends(get_db)):
+    """
+    Atualiza os dados do médico que está logado.
+    Campos não enviados permanecem inalterados.
+    """
+    db_medico = db.query(Medico).filter(Medico.id == medico["id"]).first()
+    if not db_medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
     for field, value in medico_update.model_dump(exclude_unset=True).items():
-        setattr(medico, field, value)
+        setattr(db_medico, field, value)
 
     db.commit()
-    db.refresh(medico)
-    return medico
+    db.refresh(db_medico)
+    return db_medico
 
 # DELETE - Remover um médico
 @router.delete("/medico/{id}", status_code=204)
