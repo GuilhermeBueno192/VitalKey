@@ -72,5 +72,5 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
     if not medico.ativo:
         raise HTTPException(status_code=403, detail="Médico inativo")
 
-    token = criar_token({"sub": medico.id})
+    token = criar_token({"sub": int(medico.id)})
     return {"access_token": token, "token_type": "bearer"}
