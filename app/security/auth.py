@@ -7,7 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from app.config import SECRET_KEY, ALGORITHM, TEMPO_EXPIRACAO
 
 # endpoint usado pelo FastAPI Docs para login
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # cria o token JWT
 def criar_token(dados: dict):
