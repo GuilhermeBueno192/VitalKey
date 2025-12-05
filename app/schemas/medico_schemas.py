@@ -7,6 +7,7 @@ class MedicoCreate(BaseModel):
     nome: str = Field(..., min_length=2, max_length=100)
     especialidade: str = Field(..., min_length=2, max_length=100)
     crm: str = Field(..., min_length=4, max_length=20)
+    email: str = Field(..., min_length=5, max_length=255)
     senha: str = Field(..., min_length=4, max_length=100)
 
     model_config = {
@@ -15,7 +16,7 @@ class MedicoCreate(BaseModel):
 
 # Usado para LOGIN (só precisa de CRM e senha)
 class MedicoLogin(BaseModel):
-    crm: str
+    login: str
     senha: str
 
 # Usado para RETORNAR dados (sem expor senha)
@@ -24,6 +25,8 @@ class MedicoResponse(BaseModel):
     nome: str
     especialidade: str
     crm: str
+    email: str
+    ativo: bool
 
     model_config = {
         "from_attributes": True
@@ -32,4 +35,16 @@ class MedicoResponse(BaseModel):
 class MedicoUpdate(BaseModel):
     nome: Optional[str] = None
     especialidade: Optional[str] = None
+    email: Optional[str] = None
     senha: Optional[str] = None  # pode ser alterada
+
+    model_config = {
+        "from_attributes": True
+    }
+
+class MedicoAtivoUpdate(BaseModel):
+    ativo: bool
+
+    model_config = {
+        "from_attributes": True
+    }

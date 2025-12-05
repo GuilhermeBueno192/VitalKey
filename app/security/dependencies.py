@@ -6,19 +6,19 @@ from app.database import get_db
 from app.models.medico import Medico
 
 def autenticar_medico(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
-    """
-    Verifica o token JWT e retorna o médico autenticado.
-    """
     try:
         dados_token = verificar_token(token)
-        crm = dados_token.get("crm")
-        if not crm:
+        medico_id = dados_token.get("sub")
+        if not medico_id:
             raise HTTPException(status_code=401, detail="Token inválido")
     except JWTError:
         raise HTTPException(status_code=401, detail="Token inválido")
 
-    medico = db.query(Medico).filter(Medico.crm == crm).first()
+    medico = db.query(Medico).filter(Medico.id == medico_id).first()
     if not medico:
         raise HTTPException(status_code=401, detail="Usuário não encontrado")
+
+    if not medico.ativo:
+        raise HTTPException(status_code=403, detail="Conta inativa")
 
     return medico

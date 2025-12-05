@@ -15,7 +15,7 @@ def criar_token(dados: dict):
     expiracao = datetime.now(timezone.utc) + timedelta(minutes=TEMPO_EXPIRACAO)
     dados_copia.update({
         "exp": int(expiracao.timestamp()),  # data de expiração
-        "sub": dados_copia.get("crm")       # identificador do usuário
+        "sub": dados_copia.get("id")       # identificador do usuário
     })
     token_jwt = jwt.encode(dados_copia, SECRET_KEY, algorithm=ALGORITHM)
     return token_jwt
