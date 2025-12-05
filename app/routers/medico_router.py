@@ -64,13 +64,12 @@ def atualizar_status_medico(
 # Rota para login com uso do banco de dados
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
-    login_input = form_data.username
-    medico = (db.query(Medico).filter((Medico.crm == login_input) | (Medico.email == login_input)).first())
+    medico = db.query(Medico).filter((Medico.crm == form_data.username) | (Medico.email == form_data.username)).first()
 
     if not medico or medico.senha != form_data.password:
         raise HTTPException(status_code=401, detail="Credenciais inválidas")
     if not medico.ativo:
         raise HTTPException(status_code=403, detail="Médico inativo")
 
-    token = criar_token({"id": medico.id})
+    token = criar_token(medico.id)
     return {"access_token": token, "token_type": "bearer"}

@@ -10,14 +10,16 @@ from app.config import SECRET_KEY, ALGORITHM, TEMPO_EXPIRACAO
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
 
 # cria o token JWT
-def criar_token(dados: dict):
-    dados_copia = dados.copy()
+def criar_token(medico_id: int):
+    """
+    Cria um token JWT com o campo 'sub' contendo o id do médico.
+    """
     expiracao = datetime.now(timezone.utc) + timedelta(minutes=TEMPO_EXPIRACAO)
-    dados_copia.update({
-        "exp": int(expiracao.timestamp()),  # data de expiração
-        "sub": int(dados_copia.get("id"))       # identificador do usuário
-    })
-    token_jwt = jwt.encode(dados_copia, SECRET_KEY, algorithm=ALGORITHM)
+    payload = {
+        "sub": str(medico_id),  # sempre usar string é mais seguro
+        "exp": int(expiracao.timestamp())
+    }
+    token_jwt = jwt.encode(payload, SECRET_KEY, algorithm=ALGORITHM)
     return token_jwt
 
 # verifica se o token ainda é válido
