@@ -8,10 +8,10 @@ class Paciente(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     nome = Column(String(100), nullable=False)
-    alergias = Column(JSON, default=[])
-    doencas_cronicas = Column(JSON, default=[])
-    medicamentos_continuos = Column(JSON, default=[])
-    contatos_emergencia = Column(JSON, default=[])
+    alergias = Column(JSON, default=list)
+    doencas_cronicas = Column(JSON, default=list)
+    medicamentos_continuos = Column(JSON, default=list)
+    contatos_emergencia = Column(JSON, default=list)
     created_at = Column(TIMESTAMP, default=datetime.utcnow)
     ativo = Column(Boolean, default=True, nullable=False)
 
@@ -28,9 +28,9 @@ class InformacoesPrivadas(Base):
     id = Column(Integer, primary_key=True, index=True)
     paciente_id = Column(Integer, ForeignKey("paciente.id", ondelete="CASCADE"), nullable=False)
     tipo_sanguineo = Column(String(5))
-    cirurgias = Column(JSON, default=[])
-    internacoes_passadas = Column(JSON, default=[])
-    alteracoes_exames = Column(JSON, default=[])
-    historico_exames = Column(JSON, default=[])
+    cirurgias = Column(JSON, default=list)
+    internacoes_passadas = Column(JSON, default=list)
+    alteracoes_exames = Column(JSON, default=list)
+    historico_exames = Column(JSON, default=list)
 
     paciente = relationship("Paciente", back_populates="informacoes_privadas")

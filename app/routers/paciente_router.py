@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from app.database import get_db  # função que retorna a sessão do SQLAlchemy
 from app.models.paciente import Paciente, InformacoesPrivadas  # SQLAlchemy models
-from app.schemas.paciente_schemas import PacienteBase, PacienteCompleto, PacienteUpdate, PacienteAtivoUpdate
+from app.schemas.paciente_schemas import PacienteBase, PacienteResponse, PacienteUpdate, PacienteAtivoUpdate, PacienteCreate
 from app.security.dependencies import autenticar_medico
 
 router = APIRouter()
@@ -30,7 +30,7 @@ def pesquisar_pacientes(id: Optional[int] = None, nome: Optional[str] = None, db
 
 # GET público: retorna informações básicas de um paciente específico
 @router.get("/paciente/{paciente_id}", response_model=PacienteBase)
-def get_paciente(paciente_id: str, db: Session = Depends(get_db)):
+def get_paciente_publico(paciente_id: str, db: Session = Depends(get_db)):
     paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
@@ -38,8 +38,8 @@ def get_paciente(paciente_id: str, db: Session = Depends(get_db)):
     return paciente
 
 # GET privado: retorna informações completas, precisa de token
-@router.get("/paciente/{paciente_id}/completo", response_model=PacienteCompleto)
-def get_paciente_completo(paciente_id: str, db: Session = Depends(get_db), medico=Depends(autenticar_medico)):
+@router.get("/paciente/{paciente_id}/privado", response_model=PacienteResponse)
+def get_paciente_privado(paciente_id: str, db: Session = Depends(get_db), medico=Depends(autenticar_medico)):
     paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
     if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
@@ -47,8 +47,8 @@ def get_paciente_completo(paciente_id: str, db: Session = Depends(get_db), medic
     return paciente
 
 # POST - Criar um novo paciente no sistema
-@router.post("/paciente", response_model=PacienteCompleto)
-def criar_paciente(paciente: PacienteCompleto, db: Session = Depends(get_db)):
+@router.post("/paciente", response_model=PacienteResponse)
+def criar_paciente(paciente: PacienteCreate, db: Session = Depends(get_db)):
     """
     Cria um novo paciente junto com as informações privadas.
     """
@@ -82,7 +82,7 @@ def criar_paciente(paciente: PacienteCompleto, db: Session = Depends(get_db)):
     return novo_paciente
 
 # PATCH - Atualizar parcialmente um paciente
-@router.patch("/paciente/{id}", response_model=PacienteCompleto)
+@router.patch("/paciente/{id}", response_model=PacienteResponse)
 def atualizar_paciente(id: int, paciente_update: PacienteUpdate, db: Session = Depends(get_db)):
     """
     Atualiza parcialmente um paciente e suas informações privadas.
@@ -113,20 +113,19 @@ def atualizar_paciente(id: int, paciente_update: PacienteUpdate, db: Session = D
     return paciente
 
 # PATCH - Ativar ou desativar paciente
-@router.patch("/paciente/{id}/ativo", response_model=PacienteBase)
-def atualizar_status_paciente(
-    id: int,
-    status_update: PacienteAtivoUpdate,
-    db: Session = Depends(get_db)
-):
-    paciente = db.query(Paciente).filter(Paciente.id == id).first()
+@router.patch("/paciente/{id}/status", response_model=PacienteAtivoUpdate)
+def atualizar_status_paciente(id: int, status_update: PacienteAtivoUpdate, db: Session = Depends(get_db)):
+    paciente = db.query(Paciente).filter_by(id=id).first()
 
-    if not paciente:
+    if paciente is None:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
+    if status_update.ativo is None:
+        raise HTTPException(status_code=400, detail="Campo 'ativo' é obrigatório")
+    if paciente.ativo == status_update.ativo:
+        raise HTTPException(status_code=400, detail="Paciente já está com esse status")
 
     paciente.ativo = status_update.ativo
-
     db.commit()
     db.refresh(paciente)
 
-    return paciente
+    return {"ativo": paciente.ativo}
