@@ -43,23 +43,17 @@ def atualizar_me(medico_update: MedicoUpdate, medico: Medico = Depends(autentica
     db.refresh(medico)
     return medico
 
-@router.patch("/medico/{id}/status", response_model=MedicoResponse)
-def atualizar_status_medico(
-    id: int,
-    status_update: MedicoAtivoUpdate,
-    db: Session = Depends(get_db)
-):
+@router.delete("/medico/{id}", status_code=204)
+def deletar_medico(id: int, db: Session = Depends(get_db)):
     medico = db.query(Medico).filter(Medico.id == id).first()
 
     if not medico:
         raise HTTPException(status_code=404, detail="Médico não encontrado")
 
-    medico.ativo = status_update.ativo
-
+    db.delete(medico)
     db.commit()
-    db.refresh(medico)
 
-    return medico
+    return
 
 # Rota para login com uso do banco de dados
 @router.post("/login")

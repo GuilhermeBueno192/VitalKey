@@ -112,20 +112,14 @@ def atualizar_paciente(id: int, paciente_update: PacienteUpdate, db: Session = D
     db.refresh(paciente)
     return paciente
 
-# PATCH - Ativar ou desativar paciente
-@router.patch("/paciente/{id}/status", response_model=PacienteAtivoUpdate)
-def atualizar_status_paciente(id: int, status_update: PacienteAtivoUpdate, db: Session = Depends(get_db)):
-    paciente = db.query(Paciente).filter_by(id=id).first()
+@router.delete("/paciente/{id}", status_code=204)
+def deletar_paciente(id: int, db: Session = Depends(get_db)):
+    paciente = db.query(Paciente).filter(Paciente.id == id).first()
 
-    if paciente is None:
+    if not paciente:
         raise HTTPException(status_code=404, detail="Paciente não encontrado")
-    if status_update.ativo is None:
-        raise HTTPException(status_code=400, detail="Campo 'ativo' é obrigatório")
-    if paciente.ativo == status_update.ativo:
-        raise HTTPException(status_code=400, detail="Paciente já está com esse status")
 
-    paciente.ativo = status_update.ativo
+    db.delete(paciente)
     db.commit()
-    db.refresh(paciente)
 
-    return {"ativo": paciente.ativo}
+    return
