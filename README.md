@@ -1,6 +1,7 @@
 # 🧠 VitalKey - Sistema de Gerenciamento de Pacientes
 
 Um sistema backend em **FastAPI** conectado a um banco de dados **SQLite/MySQL**, responsável por gerenciar pacientes, médicos e autenticação com JWT.
+Projeto acadêmico finalizado, pronto para testes, demonstração e apresentação.
 
 ---
 
@@ -51,10 +52,15 @@ VitalKey/
 Crie um arquivo `.env` na raiz do projeto contendo:
 
 ``` env
-DATABASE_URL=mysql+pymysql://usuario:senha@host:3306/nome_do_banco
-SECRET_KEY=chave_super_secreta
-ALGORITHM=HS256
-TEMPO_EXPIRACAO=60
+MYSQL_HOST= HOST
+MYSQL_USER= USER
+MYSQL_PASSWORD= PASSWORD
+MYSQL_DB= DB_NAME
+MYSQL_PORT= PORT
+
+SECRET_KEY= SECRET_KEY
+ALGORITHM= HS256
+TEMPO_EXPIRACAO= 60 
 ```
 
 ### Para testes locais com SQLite:
@@ -79,13 +85,12 @@ pip install -r requirements.txt
 uvicorn main:app --reload
 ```
 
-3.  Acesse a documentação automática:
+3.  Acesse a documentação interativa:
 
-```{=html}
-<!-- -->
-```
+``` bash
     http://localhost:8000/docs
-    
+```
+
 ---
 
 ## 🧩 Endpoints Principais
@@ -95,10 +100,11 @@ uvicorn main:app --reload
 | **POST**   | `/medico/`                | Cria um novo médico no sistema                                           |
 | **POST**   | `/login`                  | Autentica o médico e gera um token JWT                                   |
 | **POST**   | `/paciente/`              | Cria um novo paciente com informações públicas e privadas                |
-| **GET**    | `/medico/{id}`            | Lista o médico cadastrado                                                |
+| **GET**    | `/medico/me`              | Retorna o médico autenticado                                             |
+| **GET**    | `/pacientes`              | Lista pacientes ativos, com filtros opcionais por **id** ou **nome**     |
 | **GET**    | `/paciente/{id}`          | Lista o paciente mostrando apenas dados públicos                         |
-| **GET**    | `/paciente/{id}/completo` | Lista o paciente com dados completos (somente para médicos autenticados) |
-| **PATCH**  | `/medico/{id}`            | Atualiza parcialmente os dados de um médico                              |
+| **GET**    | `/paciente/{id}/privado`  | Lista o paciente com dados completos (somente para médicos autenticados) |
+| **PATCH**  | `/medico/me`              | Atualiza parcialmente os dados do médico autenticado                     |
 | **PATCH**  | `/paciente/{id}`          | Atualiza parcialmente os dados de um paciente                            |
 | **DELETE** | `/medico/{id}`            | Exclui um médico existente                                               |
 | **DELETE** | `/paciente/{id}`          | Exclui um paciente existente                                             |
@@ -107,6 +113,7 @@ uvicorn main:app --reload
 
 ## 🔐 **Autenticação**
 
+O sistema utiliza JWT com fluxo OAuth2 Password.
 Após o login, envie o token nos headers:
 
     Authorization: Bearer <seu_token_jwt>
@@ -115,7 +122,7 @@ Após o login, envie o token nos headers:
 
 ## 📋 Exemplos de Requisições
 
-### 🔹 POST `/paciente/`
+### 🔹 Criar Paciente – POST /paciente
 
 ```json
 {
@@ -181,4 +188,5 @@ __pycache__/
 **Guilherme Bueno** — Projeto acadêmico de Engenharia de Computação  
 Aplicando conceitos de **APIs REST**, **bancos de dados**, **segurança**
 e **autenticação JWT**.
+
 
