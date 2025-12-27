@@ -11,15 +11,16 @@ from app.security.dependencies import autenticar_medico
 
 router = APIRouter()
 
-# GET para retornar na pesquisa todos os pacientes possiveis
+# GET - Pesquisa pacientes ativos por ID e/ou nome (ou retorna todos se não houver filtros)
 @router.get("/pacientes", response_model=List[PacienteBase])
 def pesquisar_pacientes(id: Optional[int] = None, nome: Optional[str] = None, db: Session = Depends(get_db)
 ):
     """
-    Pesquisa pacientes por ID ou nome.  
-    Se nenhum parâmetro for informado, retorna todos os pacientes.
+    Pesquisa pacientes ativos por ID e/ou nome.
+    Se nenhum parâmetro for informado, retorna todos os pacientes ativos.
     """
-    query = db.query(Paciente).filter(Paciente.ativo == True)
+    
+    query = db.query(Paciente).filter(Paciente.ativo == True) # Considera apenas pacientes ativos na pesquisa
 
     if id is not None:
         query = query.filter(Paciente.id == id)
@@ -28,7 +29,7 @@ def pesquisar_pacientes(id: Optional[int] = None, nome: Optional[str] = None, db
 
     return query.all()
 
-# GET público: retorna informações básicas de um paciente específico
+# GET público - Retorna informações básicas de um paciente específico
 @router.get("/paciente/{paciente_id}", response_model=PacienteBase)
 def get_paciente_publico(paciente_id: str, db: Session = Depends(get_db)):
     paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
@@ -37,7 +38,7 @@ def get_paciente_publico(paciente_id: str, db: Session = Depends(get_db)):
 
     return paciente
 
-# GET privado: retorna informações completas, precisa de token
+# GET privado - Retorna informações completas, precisa de token
 @router.get("/paciente/{paciente_id}/privado", response_model=PacienteResponse)
 def get_paciente_privado(paciente_id: str, db: Session = Depends(get_db), medico=Depends(autenticar_medico)):
     paciente = db.query(Paciente).filter(Paciente.id == int(paciente_id)).first()
@@ -46,7 +47,7 @@ def get_paciente_privado(paciente_id: str, db: Session = Depends(get_db), medico
 
     return paciente
 
-# POST - Criar um novo paciente no sistema
+# POST - Cria um novo paciente e, opcionalmente, suas informações privadas
 @router.post("/paciente", response_model=PacienteResponse)
 def criar_paciente(paciente: PacienteCreate, db: Session = Depends(get_db)):
     """
@@ -81,7 +82,7 @@ def criar_paciente(paciente: PacienteCreate, db: Session = Depends(get_db)):
 
     return novo_paciente
 
-# PATCH - Atualizar parcialmente um paciente
+# PATCH - Atualiza parcialmente um paciente e suas informações privadas
 @router.patch("/paciente/{id}", response_model=PacienteResponse)
 def atualizar_paciente(id: int, paciente_update: PacienteUpdate, db: Session = Depends(get_db)):
     """
@@ -112,6 +113,7 @@ def atualizar_paciente(id: int, paciente_update: PacienteUpdate, db: Session = D
     db.refresh(paciente)
     return paciente
 
+# DELETE - Remove permanentemente um paciente pelo ID
 @router.delete("/paciente/{id}", status_code=204)
 def deletar_paciente(id: int, db: Session = Depends(get_db)):
     paciente = db.query(Paciente).filter(Paciente.id == id).first()

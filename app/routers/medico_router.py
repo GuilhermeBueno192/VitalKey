@@ -3,15 +3,15 @@ from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 from typing import List
 
-from app.database import get_db  # função que retorna a sessão do SQLAlchemy
-from app.models.medico import Medico  # SQLAlchemy models
-from app.schemas.medico_schemas import MedicoCreate, MedicoResponse, MedicoUpdate, MedicoAtivoUpdate  # Pydantic models
+from app.database import get_db  
+from app.models.medico import Medico  
+from app.schemas.medico_schemas import MedicoCreate, MedicoResponse, MedicoUpdate, MedicoAtivoUpdate  
 from app.security.auth import criar_token
 from app.security.dependencies import autenticar_medico
 
 router = APIRouter()
 
-# GET - Médico logado
+# GET - Retorna os dados do médico autenticado via token
 @router.get("/medico/me", response_model=MedicoResponse)
 def get_me(medico: Medico=Depends(autenticar_medico)):
     return medico
@@ -19,6 +19,7 @@ def get_me(medico: Medico=Depends(autenticar_medico)):
 # POST - Criar um novo medico no sistema
 @router.post("/medico", response_model=MedicoResponse, status_code=201)
 def criar_medico(medico: MedicoCreate, db: Session = Depends(get_db)):
+    # Verifica se já existe médico com o mesmo CRM ou e-mail
     existente = db.query(Medico).filter((Medico.crm == medico.crm) | (Medico.email == medico.email)).first()
     if existente:
         if existente.crm == medico.crm:
@@ -33,9 +34,10 @@ def criar_medico(medico: MedicoCreate, db: Session = Depends(get_db)):
 
     return novo_medico
 
-# PATCH - Atualizar parcialmente os dados do médico logado
+# PATCH - Atualiza parcialmente os dados do médico autenticado
 @router.patch("/medico/me", response_model=MedicoResponse)
 def atualizar_me(medico_update: MedicoUpdate, medico: Medico = Depends(autenticar_medico), db: Session = Depends(get_db)):
+    # Atualiza apenas os campos enviados na requisição
     for field, value in medico_update.model_dump(exclude_unset=True).items():
         setattr(medico, field, value)
 
@@ -43,6 +45,7 @@ def atualizar_me(medico_update: MedicoUpdate, medico: Medico = Depends(autentica
     db.refresh(medico)
     return medico
 
+# DELETE - Remove permanentemente um médico pelo ID
 @router.delete("/medico/{id}", status_code=204)
 def deletar_medico(id: int, db: Session = Depends(get_db)):
     medico = db.query(Medico).filter(Medico.id == id).first()
@@ -55,7 +58,7 @@ def deletar_medico(id: int, db: Session = Depends(get_db)):
 
     return
 
-# Rota para login com uso do banco de dados
+# POST - Autentica médico por CRM ou e-mail e retorna token JWT
 @router.post("/login")
 def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)):
     medico = db.query(Medico).filter((Medico.crm == form_data.username) | (Medico.email == form_data.username)).first()
